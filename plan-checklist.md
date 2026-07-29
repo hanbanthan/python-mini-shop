@@ -6,43 +6,43 @@
 
 ## Giai đoạn 0 — Khởi tạo dự án
 
-- [ ] Tạo repo/thư mục dự án, khởi tạo git
-- [ ] Tạo virtual environment (venv/poetry/pipenv)
-- [ ] Tạo cấu trúc thư mục ban đầu (ví dụ):
+- [ x] Tạo repo/thư mục dự án, khởi tạo git
+- [ x] Tạo virtual environment (venv/poetry/pipenv)
+- [ x] Tạo cấu trúc thư mục ban đầu (ví dụ):
   - `models/`, `services/`, `repositories/`, `database/`, `patterns/` (hoặc `discount/`, `factories/`), `exceptions/`, `config/`, `cli/`, `tests/`
-- [ ] Tạo file `requirements.txt` (hoặc `pyproject.toml`)
-- [ ] Tạo file `.gitignore`
-- [ ] Tạo file `README.md` (mục lục ban đầu, sẽ điền chi tiết ở cuối)
-- [ ] Tạo `main.py` (entry point) chỉ in "Hello" để xác nhận chạy được
+- [ x] Tạo file `requirements.txt` (hoặc `pyproject.toml`)
+- [ x] Tạo file `.gitignore`
+- [ x] Tạo file `README.md` (mục lục ban đầu, sẽ điền chi tiết ở cuối)
+- [ x] Tạo `main.py` (entry point) chỉ in "Hello" để xác nhận chạy được
 
 ## Giai đoạn 1 — Nền tảng: Config, Exception, Model (chưa có DB)
 
 ### 1.1 Configuration
-- [ ] Tạo file cấu hình riêng (đường dẫn DB, hằng số giảm giá tối đa, v.v.), không hard-code trong logic
+- [ x] Tạo file cấu hình riêng (đường dẫn DB, hằng số giảm giá tối đa, v.v.), không hard-code trong logic
 
 ### 1.2 Exception classes
-- [ ] Tạo base exception cho ứng dụng
-- [ ] `ProductNotFoundError`
-- [ ] `InvalidProductDataError`
-- [ ] `InsufficientStockError`
-- [ ] `InvalidOrderError`
-- [ ] `CustomerNotFoundError`
-- [ ] `InvalidCustomerDataError`
-- [ ] `DatabaseOperationError`
-- [ ] `UserInputError`
+- [ x] Tạo base exception cho ứng dụng
+- [ x] `ProductNotFoundError`
+- [ x] `InvalidProductDataError`
+- [ x] `InsufficientStockError`
+- [ x] `InvalidOrderError`
+- [ x] `CustomerNotFoundError`
+- [ x] `InvalidCustomerDataError`
+- [ x] `DatabaseOperationError`
+- [ x] `UserInputError`
 
 ### 1.3 Enum
-- [ ] Enum trạng thái sản phẩm (active/inactive)
-- [ ] Enum loại khách hàng (thường/VIP)
-- [ ] Enum trạng thái đơn hàng (pending/completed/cancelled...)
+- [ x] Enum trạng thái sản phẩm (active/inactive)
+- [ x] Enum loại khách hàng (thường/VIP)
+- [ x] Enum trạng thái đơn hàng (pending/completed/cancelled...)
 
 ### 1.4 Model / Entity (chưa cần lưu DB, chỉ là class Python thuần)
-- [ ] Class `Product` (id, name, category, price, stock_quantity, tags: set, is_active, created_at, updated_at) — encapsulation cho stock_quantity
-- [ ] Class `Customer` (id, full_name, email, phone, customer_type, timestamps)
-- [ ] Class `OrderItem` (product_id, product_name_snapshot, quantity, unit_price_snapshot, subtotal — tính từ quantity*unit_price)
-- [ ] Class `Order` (id, customer_id, items: list[OrderItem], total_before_discount, discount_amount, total_amount, status, timestamps) — tổng tiền tính từ items, không set trực tiếp
-- [ ] Quyết định class nào dùng data class, ghi chú lý do (comment/docstring)
-- [ ] Viết docstring/type hint cơ bản cho tất cả class trên
+- [ x] Class `Product` (id, name, category, price, stock_quantity, tags: set, is_active, created_at, updated_at) — encapsulation cho stock_quantity
+- [ x] Class `Customer` (id, full_name, email, phone, customer_type, timestamps)
+- [ x] Class `OrderItem` (product_id, product_name_snapshot, quantity, unit_price_snapshot, subtotal — tính từ quantity*unit_price)
+- [ x] Class `Order` (id, customer_id, items: list[OrderItem], total_before_discount, discount_amount, total_amount, status, timestamps) — tổng tiền tính từ items, không set trực tiếp
+- [ x] Quyết định class nào dùng data class, ghi chú lý do (comment/docstring)
+- [ x] Viết docstring/type hint cơ bản cho tất cả class trên
 
 **Checkpoint:** import được các model, tạo object thử nghiệm trong `main.py`, không lỗi.
 
