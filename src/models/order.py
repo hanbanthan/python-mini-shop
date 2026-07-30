@@ -56,8 +56,8 @@ class Order:
             raise InvalidOrderError(
                 "Discount amount cannot exceed the total before discount."
             )
-            self._discount_amount = amount
-            self.updated_at = datetime.now()
+        self._discount_amount = amount
+        self.updated_at = datetime.now()
 
     @property
     def total_amount(self) -> Decimal:

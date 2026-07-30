@@ -122,8 +122,9 @@ class DatabaseConnection:
         """
         Execute SELECT, return one result or None if no result  
         """
-        cursor.execute(query, params)
-        return cursor.fetchone()
+        with self.get_cursor(commit=False) as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchone()
     
     def execute_script(self, script_sql: str) -> None:
         """
