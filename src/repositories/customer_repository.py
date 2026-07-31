@@ -56,12 +56,12 @@ class CustomerRepository(BaseRepository[Customer]):
         return [self._row_to_customer(row) for row in rows]
 
     def search(self, keyword: str | None = None) -> list[Customer]:
-        query = "SELECT * FROM cutstomers WHERE 1=1"
+        query = "SELECT * FROM customers WHERE 1=1"
         params: list[object] = []
         if keyword:
             query += " AND (LOWER(full_name) LIKE ? OR LOWER(email) LIKE ?)"
             like = f"%{keyword.lower()}%"
-            params.extand([like, like])
+            params.extend([like, like])
         query += " ORDER BY id"
         rows = self._db.fetch_all(query, tuple(params))
         return [self._row_to_customer(row) for row in rows]
@@ -94,7 +94,7 @@ class CustomerRepository(BaseRepository[Customer]):
     
     def has_orders(self, entity_id: int) -> bool:
         row = self._db.fetch_one(
-            "SELECT COUNT(*) FROM orders WHERE customer_id = ?", (entity_id,)
+            "SELECT COUNT(*) AS cnt FROM orders WHERE customer_id = ?", (entity_id,)
         )
         return bool(row and row["cnt"] > 0)
 
