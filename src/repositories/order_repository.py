@@ -60,6 +60,89 @@ class OrderRepository(BaseRepository[Order]):
 
         order.id = order_id
         return order
+    
+    def create_order_with_stock_update(
+        self, order: Order, stock_updates: dict[int, int]
+    ) -> Order:
+        order.validate_not_empty()
+        with self._db.transaction() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO orders
+                (customer_id, total_before_discount, discount_amount, total_amount,
+                status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                order.customer_id,
+                str(order.total_before_discount),
+                str(order.discount_amount),
+                str(order.total_amount),
+                order.status.value,
+                order.created_at.isoformat(),
+                order.updated_at.isoformat(),
+                )
+            )
+            order_id = cursor.lastrowid
+
+            for item in order.items:
+                cursor.execute(
+                    """
+                    INSERT INTO order_items
+                    (order_id, product_id, product_name_snapshot, quantity,
+                    unit_price_snapshot, subtotal)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        order_id,
+                        item.product_id,
+                        item.product_name_snapshot,
+                        item.quantity,
+                        str(item.unit_price_snapshot),
+                        str(item.subtotal),
+                    ),
+                )
+
+            now_iso = datetime.now().isoformat()
+            for product_id, new_stock in stock_updates.items():
+                cursor.execute(
+                    "UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?",
+                    (new_stock, now_iso, product_id),
+                )
+        order.id = order_id
+        return order
+    
+    def cancel_order_with_stock_update(
+        self,
+        order: Order,
+        stock_updates: dict[int, int]
+    ) -> Order:
+        if order.id is None:
+            raise InvalidOrderError("Order id is required for canceling")
+        
+        with self._db.transaction() as cursor:
+            cursor.execute(
+                """
+                UPDATE orders
+                SET status = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    order.status.value,
+                    order.updated_at.isoformat(),
+                    order.id,
+                ),
+            )
+
+            now_iso = datetime.now().isoformat()
+
+            for product_id, new_stock in stock_updates.items():
+                cursor.execute(
+                    "UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?",
+                    (new_stock, now_iso, product_id),
+                )
+
+        return order
 
     def get_by_id(self, entity_id: int) -> Order | None:
         order_row = self._db.fetch_one("SELECT * FROM orders WHERE id = ?", (entity_id,))
