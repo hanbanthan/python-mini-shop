@@ -27,7 +27,7 @@ class ProductRepository(BaseRepository[Product]):
             new_id = self._db.execute_write(
                 """
                 INSERT INTO products 
-                (name, category, price, stock_quantity, tags, is_active, created_at, updated_at)
+                    (name, category, price, stock_quantity, tags, is_active, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
@@ -35,7 +35,7 @@ class ProductRepository(BaseRepository[Product]):
                     product.category,
                     str(product.price),
                     product.stock_quantity,
-                    ",".join(product.tags),
+                    ",".join(sorted(product.tags)),
                     1 if product.is_active else 0,
                     product.created_at.isoformat(),
                     product.updated_at.isoformat(),
@@ -108,6 +108,12 @@ class ProductRepository(BaseRepository[Product]):
         product = self.get_by_id_or_raise(entity_id)
         product.deactivate()
         self.update(product)
+    
+    def has_been_sold(self, entity_id: int) -> bool:
+        row = self._db.fetch_one(
+            "SELECT COUNT(*) as cnt FROM order_items WHERE product_id = ?", (entity_id,)
+        )
+        return bool(row and row["cnt"] > 0)
 
     def delete_hard(self, entity_id: int) -> None:
         self._db.execute_write("DELETE FROM products WHERE id = ?", (entity_id,))
