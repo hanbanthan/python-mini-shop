@@ -1,8 +1,13 @@
+"""
+python -m scripts.manual_test_services
+"""
 
 from decimal import Decimal
 
+from src.services.customer_service import CustomerService
 from src.services.product_service import ProductService
-from src.exceptions import InvalidProductDataError, ProductNotFoundError
+from src.exceptions import InvalidProductDataError, ProductNotFoundError, CustomerNotFoundError, InvalidCustomerDataError
+from src.models.enums import CustomerType
 
 def test_product_service():
     print("\n=== ProductService ====")
@@ -112,8 +117,103 @@ def test_product_service():
     except ProductNotFoundError:
         print("remove_product correctly hard deleted never sold product")
     
+def test_customer_service():
+    print("\n=== CustomerService ====")
+    service = CustomerService()
+
+    # 1. Add a correct customer
+    customer = service.add_customer(
+        full_name="Test Customer",
+        email="test@example.com",
+        phone="1234567890"
+    )
+    print("Added customer:", customer.id, customer.full_name, customer.email)
+
+    # 2. Add a customer with incorrect email
+    try:
+        service.add_customer(
+            full_name="Test Customer 2",
+            email="not an email",
+            phone="0987654321"
+        )
+        raise AssertionError("Expected InvalidCustomerDataError for invalid email")
+    except InvalidCustomerDataError:
+        print("Correctly raised InvalidCustomerDataError for invalid email")
+
+    # 3. Add a customer with existing email
+    try:
+        service.add_customer(
+            full_name="Test Customer 3",
+            email="test@example.com",
+            phone="0987654321"
+        )
+        raise AssertionError("Expected InvalidCustomerDataError for existing email")
+    except InvalidCustomerDataError:
+        print("Correctly raised InvalidCustomerDataError for existing email")
+
+    # 4. Get existing customer
+    found = service.get_customer(customer.id)
+    assert found.email == customer.email
+    print("get_customer passed:", found.full_name)
+
+    # 5. Get non-existing customer
+    try:
+        service.get_customer(9999)
+        raise AssertionError("Expected CustomerNotFoundError for non-existent customer")
+    except CustomerNotFoundError:
+        print("get_customer correctly raised CustomerNotFoundError for non-existent customer")
+
+    # 6. Search customers by name or email
+    results = service.search_customers(keyword="Test")
+    assert any(c.id == customer.id for c in results)
+    print("search_customers passed, found", len(results), "results")
+
+    # 7. Update customer
+    updated = service.update_customer(customer.id, phone="0987654321")
+    assert updated.phone == "0987654321"
+    assert updated.full_name == customer.full_name
+    print("update_customer passed new phone, name unchanged:", updated.phone, updated.full_name)
+
+    # 8. Update customer with incorrect email
+    try:
+        service.update_customer(customer.id, email="incorrect email")
+        raise AssertionError("Expected InvalidCustomerDataError for invalid email")
+    except InvalidCustomerDataError:
+        print("update_customer correctly raised InvalidCustomerDataError for invalid email")
+    
+    # 9. Update with not existing customer
+    try:
+        service.update_customer(9999, phone="0123456789")
+        raise AssertionError("Expected CustomerNotFoundError for non-existent customer")
+    except CustomerNotFoundError:
+        print("update_customer correctly raised CustomerNotFoundError for non-existent customer")
+
+    # 10. Upgrade customer to VIP
+    vip_customer = service.upgrade_to_vip(customer.id)
+    assert vip_customer.customer_type == CustomerType.VIP
+    print("upgrade_to_vip passed, customer_type:", vip_customer.customer_type)
+
+    # 11. Downgrade customer to REGULAR
+    regular_customer = service.downgrade_to_regular(customer.id)
+    assert regular_customer.customer_type == CustomerType.REGULAR
+    print("downgrade_to_regular passed, customer_type:", regular_customer.customer_type)
+
+    # 12. Delete customer with no orders 
+    no_order_customer = service.add_customer(
+        full_name="No Order Customer",
+        email="noorder@example.com",
+        phone="1112223333"
+    )
+    service.remove_customer(no_order_customer.id)
+    try:
+        service.get_customer(no_order_customer.id)
+        raise AssertionError("Expected CustomerNotFoundError for deleted customer")
+    except CustomerNotFoundError:
+        print("remove_customer correctly hard deleted customer with no orders")
+
 def main() -> None:
     product_id = test_product_service()
+    customer_id = test_customer_service()
     print("All service tests passed successfully.")
 
 if __name__ == "__main__":
