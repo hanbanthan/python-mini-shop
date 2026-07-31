@@ -1,7 +1,3 @@
-from dataclasses import dataclass, field
-from decimal import Decimal
-from datetime import datetime
-from .enums import ProductStatus
 
 """
 Use @dataclass because Product is mainly used for data storage (id, name, price,...)
@@ -13,6 +9,13 @@ Encapsulation: stock_quantity can not be modified dirrectly from outside,
 must go through the method to ensure the stock quantity is always valid 
 not negative and not exeeding the maximum stock quantity
 """
+
+from dataclasses import dataclass, field
+from decimal import Decimal
+from datetime import datetime
+from .enums import ProductStatus
+
+from src.exceptions import InvalidProductDataError, InsufficientStockError
 
 @dataclass
 class Product:
@@ -28,7 +31,7 @@ class Product:
     # field private attribute to prevent direct modification from outside class
     _stock_quantity: int = field(default=0, repr=False)
 
-    def __post__init__(self) -> None:
+    def __post_init__(self) -> None:
         if not self.name or not self.name.strip():
             raise InvalidProductDataError("Product name can not be empty")
         if self.price < 0:
