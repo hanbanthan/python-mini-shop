@@ -6,8 +6,117 @@ from decimal import Decimal
 
 from src.services.customer_service import CustomerService
 from src.services.product_service import ProductService
-from src.exceptions import InvalidProductDataError, ProductNotFoundError, CustomerNotFoundError, InvalidCustomerDataError
-from src.models.enums import CustomerType
+from src.services.order_service import OrderService
+from src.exceptions import InvalidProductDataError, ProductNotFoundError, CustomerNotFoundError, InvalidCustomerDataError, InsufficientStockError, InvalidOrderError, CustomerNotFoundError
+from src.models.enums import CustomerType, OrderStatus
+from src.database.connection import DatabaseConnection
+
+def test_order_service():
+    print("\n=== OrderService ====")
+    db = DatabaseConnection()
+    product_service = ProductService()
+    customer_service = CustomerService()
+    order_service = OrderService()
+
+    laptop= product_service.add_product(
+        name="Laptop Dell XPS 13",
+        category="Electronics",
+        price=Decimal("30000000"),
+        stock_quantity=5,
+    )
+
+    mouse = product_service.add_product(
+        name="Mouse Logitech MX Master 3",
+        category="Electronics",
+        price=Decimal("2000000"),
+        stock_quantity=10,
+    )
+
+    vip_customer = customer_service.add_customer(
+        full_name="VIP Customer",
+        email="vip@example.com",
+        phone="0987654321",
+        customer_type=CustomerType.VIP
+    )
+
+    # 1. Create order
+    order = order_service.create_order(
+        customer_id=vip_customer.id,
+        items=[(laptop.id, 1), (mouse.id, 2)]
+    )
+    print("Created order:", order.id)
+
+    expected_before_discount = laptop.price * 1 + mouse.price * 2
+    assert order.total_before_discount == expected_before_discount
+    
+    expected_discount = expected_before_discount * Decimal("15")/Decimal("100").quantize(Decimal("0.01"))
+    assert order.discount_amount == expected_discount
+    assert order.total_amount == expected_before_discount - expected_discount
+    print("Before discount:", order.total_before_discount, "Discount:", order.discount_amount, "Total:", order.total_amount)
+
+    # Check DB for order and order items and stock quantity
+    order_row = db.fetch_one("SELECT * FROM orders WHERE id = ?", (order.id,))
+    assert order_row is not None
+    assert order_row["status"] == OrderStatus.COMPLETED.value
+    print("Closed order status:", order_row["status"])
+
+    item_rows = db.fetch_all("SELECT * FROM order_items WHERE order_id = ?", (order.id,))
+    assert len(item_rows) == 2
+    print("Order items count:", len(item_rows))
+
+    laptop_row = db.fetch_all("SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,))
+    mouse_row = db.fetch_all("SELECT stock_quantity FROM products WHERE id = ?", (mouse.id,))
+    assert laptop_row[0]["stock_quantity"] == 4
+    assert mouse_row[0]["stock_quantity"] == 8
+    print("Stock quantity after order: Laptop:", laptop_row[0]["stock_quantity"])
+
+    # 2. Test get_order
+    fetched_order = order_service.get_order(order.id)
+    assert len(fetched_order.items) == 2
+    print("get_order passed, items count:", len(fetched_order.items))
+
+    # 3. Test search_orders
+    results = order_service.search_orders(customer_id=vip_customer.id, status=OrderStatus.COMPLETED)
+    assert any(o.id == order.id for o in results)
+    print("search_orders passed, found", len(results), "results")
+
+    # 4. Test empty order
+    try:
+        order_service.create_order(customer_id=vip_customer.id, items=[])
+        raise AssertionError("Expected InvalidOrderError for empty order")
+    except InvalidOrderError:
+        print("create_order correctly raised InvalidOrderError for empty order")
+    
+    # 5. Test not existing customer
+    try:
+        order_service.create_order(customer_id=9999, items=[(laptop.id, 1)])
+        raise AssertionError("Expected CustomerNotFoundError for non-existent customer")
+    except CustomerNotFoundError:
+        print("create_order correctly raised CustomerNotFoundError for non-existent customer")  
+    
+    # 6. buy over stock_quantity -> rollback, no rubbish
+    orders_before = db.fetch_one("SELECT COUNT(*) AS c from orders")["c"]
+    order_items_before = db.fetch_one("SELECT COUNT(*) AS c from order_items")["c"]
+    laptop_stock_before = db.fetch_one("SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,))["stock_quantity"]
+
+    try:
+        order_service.create_order(customer_id=vip_customer.id, items=[(laptop.id, 100)])
+        raise AssertionError("Expected InsufficientStockError for buying over stock quantity")
+    except InsufficientStockError:
+        print("create_order correctly raised InsufficientStockError for buying over stock quantity")
+
+    orders_after = db.fetch_one("SELECT COUNT(*) AS c from orders")["c"]
+    order_items_after = db.fetch_one("SELECT COUNT(*) AS c from order_items")["c"]
+    laptop_stock_after = db.fetch_one("SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,))["stock_quantity"]
+
+    assert orders_before == orders_after
+    assert order_items_before == order_items_after
+    assert laptop_stock_before == laptop_stock_after
+
+    print("Orders count before:", orders_before, "after:", orders_after)
+    print("Order items count before:", order_items_before, "after:", order_items_after)
+    print("Laptop stock before:", laptop_stock_before, "after:", laptop_stock_after)    
+
 
 def test_product_service():
     print("\n=== ProductService ====")
@@ -214,6 +323,7 @@ def test_customer_service():
 def main() -> None:
     product_id = test_product_service()
     customer_id = test_customer_service()
+    order_id = test_order_service()
     print("All service tests passed successfully.")
 
 if __name__ == "__main__":
