@@ -20,6 +20,9 @@ from src.models.enums import OrderStatus
 from src.models.order import Order
 from src.models.order_item import OrderItem
 from src.patterns.discount.factory import DiscountPolicyFactory
+from src.patterns.observer.base import OrderCreatedEvent
+from src.patterns.observer.default_publisher import build_default_order_event_publisher
+from src.patterns.observer.publisher import OrderEventPublisher
 from src.repositories.customer_repository import CustomerRepository
 from src.repositories.order_repository import OrderRepository
 from src.repositories.product_repository import ProductRepository
@@ -30,10 +33,12 @@ class OrderService:
         order_repository: OrderRepository | None = None,
         product_repository: ProductRepository | None = None,
         customer_repository: CustomerRepository | None = None,
+        order_event_publisher: OrderEventPublisher | None = None,
     ) -> None:
         self._order_repo = order_repository or OrderRepository()
         self._product_repo = product_repository or ProductRepository()
         self._customer_repo = customer_repository or CustomerRepository()
+        self._publisher = order_event_publisher or build_default_order_event_publisher()
 
     def create_order(
         self,
@@ -88,6 +93,9 @@ class OrderService:
         
         order.mark_completed()
         created_order = self._order_repo.create_order_with_stock_update(order, stock_updates)
+        
+        self._publisher.notify(OrderCreatedEvent(order=created_order, customer=customer))
+
         return created_order
 
     def list_orders(self) -> list[Order]:
