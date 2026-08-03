@@ -1,6 +1,11 @@
 from dataclasses import dataclass
-from dotenv import load_dotenv
 import os
+
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:
+    def load_dotenv() -> None:
+        return None
 
 load_dotenv()
 
