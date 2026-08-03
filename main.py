@@ -1,52 +1,26 @@
-from decimal import Decimal
+"""Entry point của chương trình — Hệ thống quản lý cửa hàng mini.
+ 
+Chạy: python main.py
+ 
+Tự động khởi tạo database (tạo bảng) nếu file DB chưa tồn tại, cấu hình
+logging, rồi chạy vòng lặp menu CLI chính đến khi người dùng chọn thoát.
+"""
 
-from src.models.customer import Customer
-from src.models.enums import CustomerType
-from src.models.order import Order
-from src.models.order_item import OrderItem
-from src.models.product import Product
+
+from pathlib import Path
+
+from src.cli.app import run
+from src.config.logging_config import configure_logging
+from src.config.settings import settings
+from src.database.init_db import init_db
 
 def main() -> None:
-    laptop = Product(
-        id=1,
-        name="Laptop Dell XPX 13",
-        category="Electronics",
-        price=Decimal("2500000"),
-        tags={"laptop", "dell", "hot"},
-    )
-    laptop.increase_stock(10)
-    print(f"Product: {laptop.name}, stock={laptop.stock_quantity}, active={laptop.is_active}")
+    configure_logging()
 
-    customer = Customer(
-        id=1,
-        full_name="Nguyen Van A",
-        email="vana@example.com",
-        phone="0901234567",
-        customer_type=CustomerType.VIP,
-    )
-    print(f"Customer: {customer.full_name}, is_vip={customer.is_vip}")
+    if not Path(settings.database_path).exists():
+        init_db()
 
-    order = Order(id=1, customer_id=customer.id)
-    order.add_item(
-        OrderItem(
-            product_id=laptop.id,
-            product_name_snapshot=laptop.name,
-            quantity=2,
-            unit_price_snapshot=laptop.price,
-        )
-    )
-    print(f"Order total before discount: {order.total_before_discount}")
-
-    order.apply_discount(Decimal("200000"))
-    print(f"Order discount: {order.discount_amount}, total: {order.total_amount}")
-
-    laptop.reduce_stock(2)
-    print(f"Product stock after sale: {laptop.stock_quantity}")
-
-    order.mark_completed()
-    print(f"Order status: {order.status}")
-
-    print("Checkpoint 1: OK")
+    run()
 
 if __name__ == "__main__":
     main()
