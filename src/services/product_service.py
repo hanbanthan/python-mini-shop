@@ -19,6 +19,9 @@ class ProductService:
     ) -> Product:
         self._validate_stock_quantity(stock_quantity)
 
+        if price <= 0:
+            raise InvalidProductDataError("Price must be greater than 0")
+
         product = Product(
             id=None, 
             name=name, 
