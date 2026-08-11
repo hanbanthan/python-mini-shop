@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from src.cli.io_helpers import (
     format_money,
-    pause,
     paginate,
+    pause,
     print_error,
     print_info,
     print_success,
@@ -21,11 +21,12 @@ _MENU_TEXT = """
 === Product Management ===
 1. Add Product
 2. List Products
-3. Search Product 
+3. Search Product
 4. Update Product
 5. Delete/Deactivate Product
 0. Back to Main Menu
 """
+
 
 def _render_product(p: Product) -> None:
     status = "Active" if p.is_active else "Inactive"
@@ -34,6 +35,7 @@ def _render_product(p: Product) -> None:
         f"  #{p.id} | {p.name} | {p.category} | {format_money(p.price)} | "
         f"Ton kho: {p.stock_quantity} | {status} | Tags: {tags}"
     )
+
 
 def _add_product(service: ProductService) -> None:
     print("\n=== Add Product ===")
@@ -49,17 +51,49 @@ def _add_product(service: ProductService) -> None:
     )
     print_success(f"Product added successfully with ID: {product.id} {product.name}")
 
+
 def _list_products(service: ProductService) -> None:
+    """(Nang cao) Dung phan tran LIMIT/OFFSET that o DB - moi lan sang
+    trang la 1 query moi, chi doc dung so dong can thiet (khac voi
+    `_search_product` ben duoi van dung 'paginate()' phia client vi ket
+    qua search da duoc loc, so luong nho, khong can toi uu DB -level)
+    """
     print("\n=== List Products ===")
-    products = service.list_products()
-    paginate(products, page_size=5, render_item=_render_product)
+    page = 1
+    page_size = 5
+    while True:
+        products, total_pages = service.list_products_page(page=page, page_size=page_size)
+        print(
+            f"\n--- Page {page}/{total_pages} (LIMIT {page_size} OFFSET {(page - 1) * page_size}) ---"
+        )
+        if not products:
+            print_info("No products found.")
+        for p in products:
+            _render_product(p)
+
+        if total_pages <= 1:
+            return
+        choice = (
+            input(
+                f"\nEnter 'n' for next page, 'p' for previous page, or 'q' to quit (current page {page}/{total_pages}): "
+            )
+            .strip()
+            .lower()
+        )
+        if choice == "n" and page < total_pages:
+            page += 1
+        elif choice == "p" and page > 1:
+            page -= 1
+        elif choice == "q":
+            return
+
 
 def _search_product(service: ProductService) -> None:
     print("\n=== Search Product ===")
     keyword = prompt_str("Enter product name or category to search: ")
     category = prompt_str("Enter category to filter (optional): ", allow_empty=True)
     min_price = prompt_decimal("Enter minimum price (optional): ", allow_empty=True)
-    max_price = prompt_decimal("Enter maximum price (optional): ", allow_empty=True)    
+    max_price = prompt_decimal("Enter maximum price (optional): ", allow_empty=True)
     tag = prompt_str("Enter tag to filter (optional): ", allow_empty=True)
     active_only = prompt_yes_no("Show only active products?")
 
@@ -74,10 +108,11 @@ def _search_product(service: ProductService) -> None:
     print(f"\nFound {len(results)} product(s) matching the criteria.")
     paginate(results, page_size=5, render_item=_render_product)
 
+
 def _update_product(service: ProductService) -> None:
     print("\n=== Update Product ===")
     product_id = prompt_int("Enter product ID to update: ", min_value=1)
-    current = service.get_product_by_id(product_id)
+    current = service.get_product(product_id)
     print("Current product details:")
     _render_product(current)
 
@@ -93,6 +128,7 @@ def _update_product(service: ProductService) -> None:
     print_success(f"Product updated successfully: #{updated.id} {updated.name}")
     _render_product(updated)
 
+
 def _remove_product(service: ProductService) -> None:
     print("\n=== Delete/Deactivate Product ===")
     product_id = prompt_int("Enter product ID to delete/deactivate: ", min_value=1)
@@ -103,6 +139,7 @@ def _remove_product(service: ProductService) -> None:
     service.remove_product(product_id)
     print_success(f"Product ID {product_id} has been deleted/deactivated.")
 
+
 _ACTIONS = {
     "1": _add_product,
     "2": _list_products,
@@ -111,8 +148,9 @@ _ACTIONS = {
     "5": _remove_product,
 }
 
+
 def product_menu_loop(service: ProductService) -> None:
-    while True:   
+    while True:
         choice = prompt_menu_choice(_MENU_TEXT, valid_choices=set(_ACTIONS) | {"0"})
         if choice == "0":
             return
@@ -121,4 +159,3 @@ def product_menu_loop(service: ProductService) -> None:
         except AppError as exc:
             print_error(f"Error: {exc}")
         pause()
-

@@ -1,8 +1,9 @@
 import logging
 
-from src.patterns.observer.base import OrderObserver, OrderCreatedEvent
+from src.patterns.observer.base import OrderCreatedEvent, OrderObserver
 
 logger = logging.getLogger("stock_update")
+
 
 class StockUpdateObserver(OrderObserver):
     def on_order_created(self, event: OrderCreatedEvent) -> None:

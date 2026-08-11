@@ -1,6 +1,5 @@
-
 from src.cli.customer_menu import customer_menu_loop
-from src.cli.io_helpers import print_error, print_info, prompt_menu_choice
+from src.cli.io_helpers import print_error, prompt_menu_choice
 from src.cli.order_menu import order_menu_loop
 from src.cli.product_menu import product_menu_loop
 from src.cli.report_menu import report_menu_loop
@@ -18,6 +17,7 @@ _MAIN_MENU_TEXT = """
 4. Report Management
 0. Exit
 """
+
 
 def run() -> None:
     product_service = ProductService()
@@ -37,8 +37,8 @@ def run() -> None:
         if choice == "0":
             print("Exiting the application. Goodbye!")
             return
-        
-        try: 
+
+        try:
             if choice == "1":
                 product_menu_loop(product_service)
             elif choice == "2":
@@ -52,5 +52,3 @@ def run() -> None:
         except (EOFError, KeyboardInterrupt):
             print("\nReturning to main menu.")
             return
-
-            

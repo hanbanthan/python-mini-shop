@@ -1,93 +1,162 @@
 # python-mini-shop
 
+A Python CLI application for managing products, customers, orders, inventory, and revenue reports for a small store. This project is a comprehensive exercise applying OOP, Design Patterns, Database (SQLite), Exception Handling, and Unit Testing.
 
+## Table of Contents
 
-## Getting started
+- [System Requirements](#system-requirements)
+- [Installation](#installation)
+- [Running the Program](#running-the-program)
+- [Running Tests](#running-tests)
+- [Project Structure](#project-structure)
+- [Architecture & Design Patterns](#architecture--design-patterns)
+- [Database](#database)
+- [Development Tools](#development-tools-linting-formatting--type-checking)
+- [Docker](#running-with-docker)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin http://gitlab.technica.vn/giapnm/python-mini-shop.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-* [Set up project integrations](http://gitlab.technica.vn/giapnm/python-mini-shop/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## System Requirements
+- python 3.11 or higher
+- No separate database server is required - SQLite is built into Python
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+```bash
+# 1. Clone / extract the project and move into the project root
+cd python-mini-shop
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+# 2. Create a virtual environment
+python3 -m venv venv
+source venv/bin/activate # Windows: venv\Scripts\activate
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+# 3. Install dependencies
+pip install -r requirements.txt
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+The `.evn` file in the project root already contains the default configuration (database path, discount percentage, etc.). You can modify it if needed:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```env
+DATABASE_PATH=database/store.db
+MAX_DISCOUNT_PERCENT=15
+VIP_DISCOUNT_PERCENT=10
+LARGE_ORDER_THRESHOLD=5000000
+LARGE_ORDER_EXTRA_DISCOUNT=5
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Running the Program
+```bash
+python main.py
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+On the first run, the application automatically creates the database file (`database/store.db`) and applies all migrations (table creation). On subsequent runs, the application checks the database version and applies only **NEW** migrations if available, without losing existing data.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+To generate sample data for quick testing:
 
-## License
-For open source projects, say how it is licensed.
+```bash
+python -m src.database.seed
+```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+The program displays the menu and continues running until the user select **"0. Exit"** from the main menu.
+
+## Running Tests
+
+The official test suite is located in `tests/` and is written using `pytest` (53 test cases covering the core business logic):
+
+```bash
+pytest -v
+```
+
+To measure test coverage:
+```bash
+pytest --cov=src --cov-report=term-missing
+```
+
+> **Note:** The `scripts/` directory contains manual test scripts used during development (`manual_test_*.py`). These are not part of the official grading test suite; they are provided for reference and quick debugging. The `tests/` directory contains the official test suite.
+
+## Project Structure
+```text
+mini-store-management/
+├── main.py                     # Entry point
+├── requirements.txt
+├── pyproject.toml              # Config for pytest/ruff/black/mypy/coverage
+├── .env                        # Configuration (not hard-coded in code)
+├── Dockerfile
+│
+├── database/
+│   └── migrations/             # SQL migrations, numbered sequentially (001_, 002_, ...)
+│
+├── src/
+│   ├── config/                  # settings.py (reads .env), logging_config.py
+│   ├── exceptions/              # All custom business exceptions
+│   ├── models/                  # Product, Customer, Order, OrderItem, Enums
+│   ├── database/                # DatabaseConnection (Singleton), init_db, migrate, seed
+│   ├── repositories/            # Data access layer (Repository Pattern)
+│   ├── patterns/
+│   │   ├── discount/             # Strategy + Factory (discount policies)
+│   │   └── observer/             # Observer Pattern (order creation events)
+│   ├── services/                # Business logic layer
+│   └── cli/                     # Command-line interface / menu
+│
+├── scripts/                      # Manual test scripts used during development
+└── tests/                        # Official pytest test suite
+```
+
+## Architecture & Design Patterns
+
+The code is clearly separated into layers, with each layer calling only the layer directly below it:
+
+```text
+CLI -> Service -> Repository -> Database (SQLite)
+```
+
+** 4 main Design Pattens, each solving a real problem:**
+| Pattern | Location | Problem Solved |
+|---|---|---|
+| **Singleton** | `src/database/connection.py` | Allows all repositories to share the same connection so transactions across multiple tables work correctly |
+| **Repository** | `src/repositories/` | Seperates data access from business logic; Services do not write SQL |
+| **Strategy** | `src/patterns/discount/` | Provides different policies based on customer type and allows the policy to be changed at run time |
+| **Factory** | `src/patterns/discount/factory.py` | Selects the correct Strategy based on `CustomerType` without spreading `if/elif` logic through the code |
+| **Observer** *(advanced)* | `src/patterns/observer/` | After an order is created, publishes an event for additional tasks such as inventory logging, customer notifications, or audit logging, while keeping those tasks independent from the order-creation logic |
+
+## Database
+
+The application uses SQLite with a simple **migration-based versioning mechanism** (`src/database/migrate.py`). Each `.sql` file in `database/migrations/` is numbered sequentially and is executed exactly once. The `schema_migrations` table keeps track of which migrations have already been applied. Therefore, running:
+
+```bash
+python -m src.database.init_db
+```
+
+multiple times is safe.
+
+** 4 business tables: **
+- `products`
+- `customers`
+- `orders`
+- `order_items`
+
+See the detailed schema in `database/migrations/001_init.sql`.
+
+There is also an `audit_log` table, created by migration `002`,
+which stores queryable audit log records.
+
+### Safety
+- All queries use parameterized SQL (`?` placeholders); user input is never concatenated directly into SQL.
+- Order creation is atomic - everything is committed once and the the entire transaction is rolled back if an error occurs.
+- Stock deduction uses `UPDATE ... WHERE stock_quantity >= ?` (conditional update) to remain safe when multiple transactions attempt to purchase the same product at nearly the same time - preventing the system from selling more items than are actually in stock, even under a race condition.
+
+## Development Tools (Linting / Formatting / Type Checking)
+
+The following tools are configured in `pyproject.toml`:
+
+```bash
+black .       # Format code
+ruff check .  # Lint code
+mypy src      # Static type checking
+```
+
+## Running with Docker
+
+```bash
+docker build -t mini-store
+docker run -it --rm -v "$(pwd)/database:/app/database" mini-store
+```
+
+The `database/` directory is mounted outside the container so that database data is preserved when the container is removed.

@@ -1,6 +1,6 @@
 from src.cli.io_helpers import (
-    pause,
     paginate,
+    pause,
     print_error,
     print_info,
     print_success,
@@ -25,11 +25,10 @@ _MENU_TEXT = """
 0. Back to Main Menu
 """
 
+
 def _render_customer(c: Customer) -> None:
-    print(
-        f"  #{c.id} | {c.full_name} | {c.email} | {c.phone} | "
-        f"{c.customer_type.value}"
-    )
+    print(f"  #{c.id} | {c.full_name} | {c.email} | {c.phone} | {c.customer_type.value}")
+
 
 def _add_customer(service: CustomerService) -> None:
     print("\n=== Add Customer ===")
@@ -44,10 +43,12 @@ def _add_customer(service: CustomerService) -> None:
     )
     print_success(f"Customer added successfully with ID: {customer.id} {customer.full_name}")
 
+
 def _list_customers(service: CustomerService) -> None:
     print("\n=== List Customers ===")
     customers = service.list_customers()
     paginate(customers, page_size=5, render_item=_render_customer)
+
 
 def _search_customer(service: CustomerService) -> None:
     print("\n=== Search Customer ===")
@@ -56,12 +57,15 @@ def _search_customer(service: CustomerService) -> None:
     print_info(f"Found {len(results)} customer(s) matching '{keyword}':")
     paginate(results, page_size=5, render_item=_render_customer)
 
+
 def _update_customer(service: CustomerService) -> None:
     print("\n=== Update Customer ===")
     customer_id = prompt_int("Enter customer ID to update: ", min_value=1)
     current = service.get_customer(customer_id)
-    print_info(f"Current details: {current.full_name} | {current.email} | {current.phone} | {current.customer_type.value}")
-    _render_customer(current)   
+    print_info(
+        f"Current details: {current.full_name} | {current.email} | {current.phone} | {current.customer_type.value}"
+    )
+    _render_customer(current)
 
     print("Enter new details (leave blank to keep current value):")
     full_name = prompt_str("New full name: ", allow_empty=True)
@@ -69,13 +73,11 @@ def _update_customer(service: CustomerService) -> None:
     phone = prompt_str("New phone number: ", allow_empty=True)
 
     updated = service.update_customer(
-        customer_id=customer_id,
-        full_name=full_name,
-        email=email,
-        phone=phone
+        customer_id=customer_id, full_name=full_name, email=email, phone=phone
     )
     print_success(f"Customer updated successfully: #{updated.id} {updated.full_name}")
     _render_customer(updated)
+
 
 def _change_customer_tier(service: CustomerService) -> None:
     print("\n=== Upgrade/Downgrade Customer Type ===")
@@ -91,16 +93,18 @@ def _change_customer_tier(service: CustomerService) -> None:
         if prompt_yes_no("Upgrade to VIP?"):
             updated = service.upgrade_to_vip(customer_id)
             print_success(f"Customer upgraded to VIP: #{updated.id} {updated.full_name}")
-        
+
+
 def _remove_customer(service: CustomerService) -> None:
     print("\n=== Delete Customer ===")
     customer_id = prompt_int("Enter customer ID to delete: ", min_value=1)
-    service.get_customer(customer_id)  
+    service.get_customer(customer_id)
     if not prompt_yes_no(f"Are you sure you want to delete customer ID {customer_id}?"):
         print_info("Operation cancelled.")
         return
     service.remove_customer(customer_id)
     print_success(f"Customer ID {customer_id} has been deleted.")
+
 
 _ACTIONS = {
     "1": _add_customer,
@@ -110,6 +114,7 @@ _ACTIONS = {
     "5": _change_customer_tier,
     "6": _remove_customer,
 }
+
 
 def customer_menu_loop(service: CustomerService) -> None:
     while True:

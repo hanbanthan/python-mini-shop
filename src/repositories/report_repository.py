@@ -3,10 +3,11 @@ from decimal import Decimal
 
 from src.database.connection import DatabaseConnection
 
+
 class ReportRepository:
     def __init__(self, db: DatabaseConnection | None = None) -> None:
         self._db = db or DatabaseConnection()
-    
+
     @staticmethod
     def _date_filter(
         date_from: datetime | None, date_to: datetime | None, column: str = "created_at"
@@ -20,7 +21,7 @@ class ReportRepository:
             clause += f" AND {column} <= ?"
             params.append(date_to.isoformat())
         return clause, params
-    
+
     def count_orders(
         self, date_from: datetime | None = None, date_to: datetime | None = None
     ) -> int:
@@ -29,8 +30,10 @@ class ReportRepository:
             f"SELECT COUNT(*) as cnt FROM orders WHERE status = 'completed'{clause}",
             tuple(params),
         )
-        return int(row["cnt"]) if row else 0
-    
+        if row is None:
+            return 0
+        return int(row["cnt"])
+
     def revenue_summary(
         self, date_from: datetime | None = None, date_to: datetime | None = None
     ) -> dict[str, Decimal]:
@@ -46,12 +49,18 @@ class ReportRepository:
             """,
             tuple(params),
         )
+        if row is None:
+            return {
+                "total_before_discount": Decimal("0"),
+                "total_discount": Decimal("0"),
+                "total_revenue": Decimal("0"),
+            }
         return {
             "total_before_discount": Decimal(str(row["total_before_discount"])),
             "total_discount": Decimal(str(row["total_discount"])),
             "total_revenue": Decimal(str(row["total_revenue"])),
         }
-    
+
     def best_selling_products(
         self,
         limit: int = 5,
@@ -82,7 +91,7 @@ class ReportRepository:
             }
             for row in rows
         ]
-    
+
     def revenue_by_category(
         self, date_from: datetime | None = None, date_to: datetime | None = None
     ) -> dict[str, Decimal]:
@@ -118,7 +127,6 @@ class ReportRepository:
         )
         return {r["period"]: Decimal(str(r["revenue"])) for r in rows}
 
-    
     def revenue_by_month(
         self, date_from: datetime | None = None, date_to: datetime | None = None
     ) -> dict[str, Decimal]:
@@ -132,12 +140,12 @@ class ReportRepository:
             GROUP BY period
             ORDER BY period
             """,
-            tuple(params)
+            tuple(params),
         )
         return {r["period"]: Decimal(str(r["revenue"])) for r in rows}
 
     def top_orders(
-        self, 
+        self,
         limit: int = 5,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
@@ -148,7 +156,7 @@ class ReportRepository:
             SELECT id, customer_id, total_amount, created_at
             FROM orders
             WHERE status = 'completed'{clause}
-            ORDER BY total_amount DESC 
+            ORDER BY total_amount DESC
             LIMIT ?
             """,
             (*params, limit),
@@ -164,7 +172,7 @@ class ReportRepository:
         ]
 
     def top_customers_by_spending(
-        self, 
+        self,
         limit: int = 5,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
@@ -191,5 +199,3 @@ class ReportRepository:
             }
             for row in rows
         ]
-
-    

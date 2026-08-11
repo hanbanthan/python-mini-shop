@@ -110,8 +110,8 @@ def main() -> None:
     assert "Customer with email testbuyer.cli@example.com already exists" in output
     assert "Order created successfully with ID: 1" in output
     assert "Total Amount: 1,500,000.00 USD" in output
-    #assert "=== Report Management ===" in output
-    #assert "Total orders: 1" in output
+    # assert "=== Report Management ===" in output
+    # assert "Total orders: 1" in output
     print("[OK] End-to-end product -> customer -> order -> report flow completed")
 
     print("\nAll manual CLI tests (Stage 9): PASS")

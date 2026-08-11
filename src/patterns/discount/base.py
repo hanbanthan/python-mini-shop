@@ -13,13 +13,14 @@ from decimal import Decimal
 
 from src.config.settings import settings
 
+
 class DiscountPolicy(ABC):
     """Interface + template method for all discount policy"""
 
     @abstractmethod
     def _discount_percent(self, order_total: Decimal) -> Decimal:
         """Return discount percent based on order_total"""
-        
+
     def calculate_discount(self, order_total: Decimal) -> Decimal:
         """
         Calculate real discount -> always be limit by settings.max_discount_percent(15%),
@@ -28,7 +29,7 @@ class DiscountPolicy(ABC):
         """
         if order_total < 0:
             raise ValueError("order total cannot be negative")
-        
+
         raw_percent = self._discount_percent(order_total)
         capped_percent = min(raw_percent, Decimal(str(settings.max_discount_percent)))
         capped_percent = max(capped_percent, Decimal("0"))

@@ -1,7 +1,7 @@
 """
 Model OrderItem
 
-Use dataclass because OrderItem is value object, used to store snapshot of 
+Use dataclass because OrderItem is value object, used to store snapshot of
 at the time of order creation, no complex logic in this class
 so dataclass + property is enough to implement this calss
 
@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from src.exceptions import InvalidOrderError
 
+
 @dataclass
 class OrderItem:
     product_id: int
@@ -24,13 +25,13 @@ class OrderItem:
     def __post_init__(self) -> None:
         if self.quantity <= 0:
             raise InvalidOrderError(
-                f"Quantity of product {self.product} must be greater than 0"
+                f"Quantity of product {self.product_name_snapshot} must be greater than 0"
             )
-        if self.unit_price_snapshot<= 0:
+        if self.unit_price_snapshot <= 0:
             raise InvalidOrderError(
-                f"Unit price of product {self.product} must be greatert than 0"
+                f"Unit price of product {self.product_name_snapshot} must be greater than 0"
             )
-    
+
     @property
     def subtotal(self) -> Decimal:
         return self.quantity * self.unit_price_snapshot

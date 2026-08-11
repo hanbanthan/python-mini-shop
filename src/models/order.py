@@ -17,6 +17,7 @@ from src.exceptions import InvalidOrderError
 from src.models.enums import OrderStatus
 from src.models.order_item import OrderItem
 
+
 @dataclass
 class Order:
     id: int | None
@@ -25,7 +26,7 @@ class Order:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
-    # private fields 
+    # private fields
     _items: list[OrderItem] = field(default_factory=list, repr=False)
     _discount_amount: Decimal = field(default=Decimal("0"), repr=False)
 
@@ -35,9 +36,7 @@ class Order:
 
     def add_item(self, item: OrderItem) -> None:
         if self.status != OrderStatus.PENDING:
-            raise InvalidOrderError(
-                "Can only add items to an order with status PENDING."
-            )
+            raise InvalidOrderError("Can only add items to an order with status PENDING.")
         self._items.append(item)
         self.updated_at = datetime.now()
 
@@ -53,17 +52,15 @@ class Order:
         if amount < 0:
             raise InvalidOrderError("Discount amount cannot be negative.")
         if amount > self.total_before_discount:
-            raise InvalidOrderError(
-                "Discount amount cannot exceed the total before discount."
-            )
+            raise InvalidOrderError("Discount amount cannot exceed the total before discount.")
         self._discount_amount = amount
         self.updated_at = datetime.now()
 
     @property
     def total_amount(self) -> Decimal:
         return self.total_before_discount - self._discount_amount
-    
-    def  validate_not_empty(self) -> None:
+
+    def validate_not_empty(self) -> None:
         if not self._items:
             raise InvalidOrderError("Order must have aleast one item.")
 
@@ -73,7 +70,5 @@ class Order:
         self.updated_at = datetime.now()
 
     def cancel(self) -> None:
-        self.status = OrderStatus.CANCELED
+        self.status = OrderStatus.CANCELLED
         self.updated_at = datetime.now()
-        
-
