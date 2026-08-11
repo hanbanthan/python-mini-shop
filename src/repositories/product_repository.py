@@ -1,7 +1,7 @@
 """
 ProductRepository - Repository pattern for Product entity
 
-Take reponse from switching between object Product in Python and 
+Take reponse from switching between object Product in Python and
 table products in SQlite. This is only the place allow to write
 SQL queries, ProductService can not query DB directly
 """
@@ -16,6 +16,7 @@ from src.models.enums import ProductStatus
 from src.models.product import Product
 from src.repositories.base_repository import BaseRepository
 
+
 class ProductRepository(BaseRepository[Product]):
     def __init__(self, db: DatabaseConnection | None = None) -> None:
         # Constructor injection: allow to pass falke/mock DB when unit test
@@ -26,7 +27,7 @@ class ProductRepository(BaseRepository[Product]):
         try:
             new_id = self._db.execute_write(
                 """
-                INSERT INTO products 
+                INSERT INTO products
                     (name, category, price, stock_quantity, tags, is_active, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -63,6 +64,24 @@ class ProductRepository(BaseRepository[Product]):
         rows = self._db.fetch_all("SELECT * FROM products")
         return [self._row_to_product(row) for row in rows]
 
+    def get_page(self, page: int = 1, page_size: int = 10) -> tuple[list[Product], int]:
+        """(Nang cao) Phan trang bang LIMIT/OFFSET ngay tai DB - khac voi
+        cach phan trang phia client (`io_helpers.paginate`) dang load het
+        roi cat trong bo nho. Cach nay chi doc dung `page_size` dong can
+        thiet tu DB, phu hop khi so luong san pham lon.
+
+        Tra ve (danh sach san pham trong trang, tong so san pham)
+        """
+        if page < 1:
+            page = 1
+        offset = (page - 1) * page_size
+        rows = self._db.fetch_all(
+            "SELECT * FROM products ORDER BY id LIMIT ? OFFSET ?", (page_size, offset)
+        )
+        total_row = self._db.fetch_one("SELECT COUNT(*) as cnt FROM products")
+        total = int(total_row["cnt"]) if total_row is not None else 0
+        return [self._row_to_product(row) for row in rows], total
+
     def search(
         self,
         keyword: str | None = None,
@@ -78,7 +97,7 @@ class ProductRepository(BaseRepository[Product]):
             query += " AND category = ?"
             params.append(category)
         if active_only:
-            query += " AND is active = 1"
+            query += " AND is_active = 1"
         query += " ORDER BY id"
         rows = self._db.fetch_all(query, tuple(params))
         return [self._row_to_product(row) for row in rows]
@@ -108,7 +127,7 @@ class ProductRepository(BaseRepository[Product]):
         product = self.get_by_id_or_raise(entity_id)
         product.deactivate()
         self.update(product)
-    
+
     def has_been_sold(self, entity_id: int) -> bool:
         row = self._db.fetch_one(
             "SELECT COUNT(*) as cnt FROM order_items WHERE product_id = ?", (entity_id,)
@@ -120,7 +139,7 @@ class ProductRepository(BaseRepository[Product]):
 
     @staticmethod
     def _row_to_product(row: sqlite3.Row) -> Product:
-        """ map sqlite3.Row -> object Product, convert datat correctly:
+        """map sqlite3.Row -> object Product, convert datat correctly:
         tags(string "a,b,c") -> set[str], is_active(0/1) -> ProductStatus,
         price(NUMERIC) -> Decimal.
         """

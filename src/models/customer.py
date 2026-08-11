@@ -17,6 +17,7 @@ from src.models.enums import CustomerType
 
 _EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+
 @dataclass
 class Customer:
     id: int | None
@@ -34,7 +35,7 @@ class Customer:
             raise InvalidCustomerDataError(f"Invalid email: {self.email}")
         if not self.phone or not self.phone.strip():
             raise InvalidCustomerDataError("Customer phone can not be empty.")
-    
+
     @property
     def is_vip(self) -> bool:
         return self.customer_type == CustomerType.VIP

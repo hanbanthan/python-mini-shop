@@ -1,21 +1,22 @@
-
 """
 Use @dataclass because Product is mainly used for data storage (id, name, price,...)
-there is no complex logic in this class, so using dataclass reduce boilerplate code (__init__, __repr__, __eq___) 
+there is no complex logic in this class, so using dataclass reduce boilerplate code (__init__, __repr__, __eq___)
 and still can add method if needed in the future
 
 Encapsulation: stock_quantity can not be modified dirrectly from outside,
-(product.stock_quantity=10) is not allowed. Every modification of stock 
-must go through the method to ensure the stock quantity is always valid 
+(product.stock_quantity=10) is not allowed. Every modification of stock
+must go through the method to ensure the stock quantity is always valid
 not negative and not exeeding the maximum stock quantity
 """
 
 from dataclasses import dataclass, field
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
+from src.exceptions import InsufficientStockError, InvalidProductDataError
+
 from .enums import ProductStatus
 
-from src.exceptions import InvalidProductDataError, InsufficientStockError
 
 @dataclass
 class Product:

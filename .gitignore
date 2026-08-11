@@ -7,4 +7,6 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 plan-checklist.md
-project-context.md.coverage
+project-context.md
+.coverage
+docs/

@@ -4,6 +4,7 @@ from src.exceptions import InvalidProductDataError
 from src.models.product import Product
 from src.repositories.product_repository import ProductRepository
 
+
 class ProductService:
     def __init__(self, product_repository: ProductRepository | None = None) -> None:
         # Constructor injection allow pass fake/mock repository when unit test
@@ -19,12 +20,10 @@ class ProductService:
     ) -> Product:
         self._validate_stock_quantity(stock_quantity)
 
-        product = Product(
-            id=None, 
-            name=name, 
-            category=category, 
-            price=price, tags=tags or set()
-        )
+        if price <= 0:
+            raise InvalidProductDataError("Price must be greater than 0")
+
+        product = Product(id=None, name=name, category=category, price=price, tags=tags or set())
         if stock_quantity > 0:
             product.increase_stock(stock_quantity)
         return self._repo.add(product)
@@ -32,10 +31,20 @@ class ProductService:
     def list_products(self) -> list[Product]:
         return self._repo.get_all()
 
+    def list_products_page(self, page: int = 1, page_size: int = 10) -> tuple[list[Product], int]:
+        """(Nang cao) Phan trang qua LIMIT/OFFSET o tang DB - dung cho danh
+        sach lon thay vi load het roi cat trong bo nho.
+
+        Tra ve (danh sach san pham trong trang, tong so trang).
+        """
+        products, total_count = self._repo.get_page(page=page, page_size=page_size)
+        total_pages = max(1, (total_count + page_size - 1) // page_size)
+        return products, total_pages
+
     def get_product(self, product_id: int) -> Product:
         return self._repo.get_by_id_or_raise(product_id)
-    
-    def search_products (
+
+    def search_products(
         self,
         keyword: str | None = None,
         category: str | None = None,
@@ -53,9 +62,9 @@ class ProductService:
         if tag is not None:
             tag_lower = tag.lower()
             products = [p for p in products if tag_lower in {t.lower() for t in p.tags}]
-        
+
         return products
-    
+
     def update_product(
         self,
         product_id: int,
@@ -75,14 +84,14 @@ class ProductService:
             raise InvalidProductDataError("Product name can not be empty")
         if new_price < 0:
             raise InvalidProductDataError("Product price can not be negative")
-        
+
         product.name = new_name
         product.category = new_category
         product.price = new_price
 
         if tags is not None:
             product.tags = tags
-        
+
         if stock_quantity is not None:
             self._validate_stock_quantity(stock_quantity)
             diff = stock_quantity - product.stock_quantity
@@ -94,8 +103,8 @@ class ProductService:
         return product
 
     def remove_product(self, product_id: int) -> None:
-        self._repo.get_by_id_or_raise(product_id) 
-        
+        self._repo.get_by_id_or_raise(product_id)
+
         if self._repo.has_been_sold(product_id):
             self._repo.deactivate(product_id)
         else:
@@ -107,4 +116,3 @@ class ProductService:
             raise InvalidProductDataError("Stock quantity must be an integer")
         if stock_quantity < 0:
             raise InvalidProductDataError("Stock quantity can not be negative")
-

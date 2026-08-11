@@ -14,11 +14,14 @@ from src.repositories.customer_repository import CustomerRepository
 from src.repositories.order_repository import OrderRepository
 from src.repositories.product_repository import ProductRepository
 
+
 def test_product_repository():
     print("\n=== ProductRepository ====")
     repo = ProductRepository()
 
-    product = Product(id=None, name="Man hinh Dell 27inch", category="Electronics", price=Decimal("4500000"))
+    product = Product(
+        id=None, name="Man hinh Dell 27inch", category="Electronics", price=Decimal("4500000")
+    )
     product.increase_stock(10)
     product = repo.add(product)
     print("Added product:", product.id, product.name, product.price, product.stock_quantity)
@@ -47,8 +50,9 @@ def test_product_repository():
         raise AssertionError("Expected ProductNotFoundError for non-existent product")
     except ProductNotFoundError:
         print("get_by_id_or_raise correctly raised ProductNotFoundError for non-existent product")
-    
+
     return product.id
+
 
 def test_customer_repository():
     print("\n=== CustomerRepository ====")
@@ -59,7 +63,7 @@ def test_customer_repository():
         full_name="Le Van C",
         email="levanc@example.com",
         phone="0987654321",
-        customer_type=CustomerType.REGULAR
+        customer_type=CustomerType.REGULAR,
     )
     customer = repo.add(customer)
     print("Added customer:", customer.id, customer.full_name, customer.email)
@@ -80,13 +84,13 @@ def test_customer_repository():
             full_name="Duplicate Customer",
             email=customer.email,
             phone="0123456789",
-            customer_type=CustomerType.REGULAR
+            customer_type=CustomerType.REGULAR,
         )
         repo.add(duplicate)
         raise AssertionError("Expected InvalidCustomerDataError for duplicate email")
     except InvalidCustomerDataError:
         print("add correctly raised InvalidCustomerDataError for duplicate email")
-    
+
     try:
         repo.get_by_id_or_raise(9999)
         raise AssertionError("Expected CustomerNotFoundError for non-existent customer")
@@ -94,6 +98,7 @@ def test_customer_repository():
         print("get_by_id_or_raise correctly raised CustomerNotFoundError for non-existent customer")
 
     return customer.id
+
 
 def test_order_repository(product_id: int, customer_id: int) -> None:
     print("\n=== OrderRepository ====")
@@ -127,11 +132,13 @@ def test_order_repository(product_id: int, customer_id: int) -> None:
     assert any(o.id == order.id for o in results)
     print("search(customer_id, status) passed, found", len(results), "results")
 
+
 def main() -> None:
     product_id = test_product_repository()
     customer_id = test_customer_repository()
     test_order_repository(product_id, customer_id)
     print("\nAll repository tests passed successfully.")
+
 
 if __name__ == "__main__":
     main()

@@ -4,12 +4,20 @@ python -m scripts.manual_test_services
 
 from decimal import Decimal
 
-from src.services.customer_service import CustomerService
-from src.services.product_service import ProductService
-from src.services.order_service import OrderService
-from src.exceptions import InvalidProductDataError, ProductNotFoundError, CustomerNotFoundError, InvalidCustomerDataError, InsufficientStockError, InvalidOrderError, CustomerNotFoundError
-from src.models.enums import CustomerType, OrderStatus
 from src.database.connection import DatabaseConnection
+from src.exceptions import (
+    CustomerNotFoundError,
+    InsufficientStockError,
+    InvalidCustomerDataError,
+    InvalidOrderError,
+    InvalidProductDataError,
+    ProductNotFoundError,
+)
+from src.models.enums import CustomerType, OrderStatus
+from src.services.customer_service import CustomerService
+from src.services.order_service import OrderService
+from src.services.product_service import ProductService
+
 
 def test_order_service():
     print("\n=== OrderService ====")
@@ -18,7 +26,7 @@ def test_order_service():
     customer_service = CustomerService()
     order_service = OrderService()
 
-    laptop= product_service.add_product(
+    laptop = product_service.add_product(
         name="Laptop Dell XPS 13",
         category="Electronics",
         price=Decimal("30000000"),
@@ -36,23 +44,31 @@ def test_order_service():
         full_name="VIP Customer",
         email="vip@example.com",
         phone="0987654321",
-        customer_type=CustomerType.VIP
+        customer_type=CustomerType.VIP,
     )
 
     # 1. Create order
     order = order_service.create_order(
-        customer_id=vip_customer.id,
-        items=[(laptop.id, 1), (mouse.id, 2)]
+        customer_id=vip_customer.id, items=[(laptop.id, 1), (mouse.id, 2)]
     )
     print("Created order:", order.id)
 
     expected_before_discount = laptop.price * 1 + mouse.price * 2
     assert order.total_before_discount == expected_before_discount
-    
-    expected_discount = expected_before_discount * Decimal("15")/Decimal("100").quantize(Decimal("0.01"))
+
+    expected_discount = (
+        expected_before_discount * Decimal("15") / Decimal("100").quantize(Decimal("0.01"))
+    )
     assert order.discount_amount == expected_discount
     assert order.total_amount == expected_before_discount - expected_discount
-    print("Before discount:", order.total_before_discount, "Discount:", order.discount_amount, "Total:", order.total_amount)
+    print(
+        "Before discount:",
+        order.total_before_discount,
+        "Discount:",
+        order.discount_amount,
+        "Total:",
+        order.total_amount,
+    )
 
     # Check DB for order and order items and stock quantity
     order_row = db.fetch_one("SELECT * FROM orders WHERE id = ?", (order.id,))
@@ -86,18 +102,20 @@ def test_order_service():
         raise AssertionError("Expected InvalidOrderError for empty order")
     except InvalidOrderError:
         print("create_order correctly raised InvalidOrderError for empty order")
-    
+
     # 5. Test not existing customer
     try:
         order_service.create_order(customer_id=9999, items=[(laptop.id, 1)])
         raise AssertionError("Expected CustomerNotFoundError for non-existent customer")
     except CustomerNotFoundError:
-        print("create_order correctly raised CustomerNotFoundError for non-existent customer")  
-    
+        print("create_order correctly raised CustomerNotFoundError for non-existent customer")
+
     # 6. buy over stock_quantity -> rollback, no rubbish
     orders_before = db.fetch_one("SELECT COUNT(*) AS c from orders")["c"]
     order_items_before = db.fetch_one("SELECT COUNT(*) AS c from order_items")["c"]
-    laptop_stock_before = db.fetch_one("SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,))["stock_quantity"]
+    laptop_stock_before = db.fetch_one(
+        "SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,)
+    )["stock_quantity"]
 
     try:
         order_service.create_order(customer_id=vip_customer.id, items=[(laptop.id, 100)])
@@ -107,7 +125,9 @@ def test_order_service():
 
     orders_after = db.fetch_one("SELECT COUNT(*) AS c from orders")["c"]
     order_items_after = db.fetch_one("SELECT COUNT(*) AS c from order_items")["c"]
-    laptop_stock_after = db.fetch_one("SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,))["stock_quantity"]
+    laptop_stock_after = db.fetch_one(
+        "SELECT stock_quantity FROM products WHERE id = ?", (laptop.id,)
+    )["stock_quantity"]
 
     assert orders_before == orders_after
     assert order_items_before == order_items_after
@@ -115,7 +135,7 @@ def test_order_service():
 
     print("Orders count before:", orders_before, "after:", orders_after)
     print("Order items count before:", order_items_before, "after:", order_items_after)
-    print("Laptop stock before:", laptop_stock_before, "after:", laptop_stock_after)    
+    print("Laptop stock before:", laptop_stock_before, "after:", laptop_stock_after)
 
 
 def test_product_service():
@@ -128,7 +148,7 @@ def test_product_service():
         category="Test Category",
         price=Decimal("1500000"),
         stock_quantity=10,
-        tags={"test", "product"}
+        tags={"test", "product"},
     )
     print("Added product:", product.id, product.name, product.price, product.stock_quantity)
 
@@ -143,7 +163,7 @@ def test_product_service():
         raise AssertionError("it should raise InvalidProductDataError (empty name)")
     except InvalidProductDataError:
         print("Correctly raised InvalidProductDataError for empty name")
-    
+
     try:
         service.add_product(
             name="Test",
@@ -154,7 +174,7 @@ def test_product_service():
         raise AssertionError("it should raise InvalidProductDataError (negative price)")
     except InvalidProductDataError:
         print("Correctly raised InvalidProductDataError for negative price")
-    
+
     try:
         service.add_product(
             name="Test",
@@ -165,7 +185,7 @@ def test_product_service():
         raise AssertionError("It should raise InvalidProductDataError (negative stock qunantity)")
     except InvalidProductDataError:
         print("Correctly raised InvalidProductDataError for negative stock quantity")
-    
+
     # 3. Find product existing
     found = service.get_product(product.id)
     assert found.name == product.name
@@ -174,18 +194,24 @@ def test_product_service():
     # 4. Find product not existing
     try:
         service.get_product(9999)
-        raise AssertionError("Expected ProductNotFoundError for non-existent product")  
+        raise AssertionError("Expected ProductNotFoundError for non-existent product")
     except ProductNotFoundError:
-        print("get_product_by_id correctly raised ProductNotFoundError for non-existent product")   
-    
+        print("get_product_by_id correctly raised ProductNotFoundError for non-existent product")
+
     # 5. Search according to keyword + tag + price range
     results = service.search_products(keyword="Test", tag="product", min_price=Decimal("1000000"))
     assert any(p.id == product.id for p in results)
     print("search_products passed, found", len(results), "results")
 
-    results_out_of_range = service.search_products(keyword="Test", tag="product", min_price=Decimal("2000000"))
+    results_out_of_range = service.search_products(
+        keyword="Test", tag="product", min_price=Decimal("2000000")
+    )
     assert not any(p.id == product.id for p in results_out_of_range)
-    print("search_products with min_price out of range passed, found", len(results_out_of_range), "results")
+    print(
+        "search_products with min_price out of range passed, found",
+        len(results_out_of_range),
+        "results",
+    )
 
     # 6. Update product
     updated = service.update_product(product.id, price=Decimal("1400000"))
@@ -204,11 +230,11 @@ def test_product_service():
         raise AssertionError("Expected InvalidProductDataError for negative stock quantity")
     except InvalidProductDataError:
         print("update_product correctly raised InvalidProductDataError for negative stock quantity")
-    
+
     # 9. Update product not existing
     try:
         service.update_product(9999, price=Decimal("100"))
-        raise AsssertionError("Expected ProductNotFoundError for non-existent product")
+        raise AssertionError("Expected ProductNotFoundError for non-existent product")
     except ProductNotFoundError:
         print("update_product correctly raised ProductNotFoundError for non-existent product")
 
@@ -225,26 +251,21 @@ def test_product_service():
         raise AssertionError("Expected ProductNotFoundError for deleted product")
     except ProductNotFoundError:
         print("remove_product correctly hard deleted never sold product")
-    
+
+
 def test_customer_service():
     print("\n=== CustomerService ====")
     service = CustomerService()
 
     # 1. Add a correct customer
     customer = service.add_customer(
-        full_name="Test Customer",
-        email="test@example.com",
-        phone="1234567890"
+        full_name="Test Customer", email="test@example.com", phone="1234567890"
     )
     print("Added customer:", customer.id, customer.full_name, customer.email)
 
     # 2. Add a customer with incorrect email
     try:
-        service.add_customer(
-            full_name="Test Customer 2",
-            email="not an email",
-            phone="0987654321"
-        )
+        service.add_customer(full_name="Test Customer 2", email="not an email", phone="0987654321")
         raise AssertionError("Expected InvalidCustomerDataError for invalid email")
     except InvalidCustomerDataError:
         print("Correctly raised InvalidCustomerDataError for invalid email")
@@ -252,9 +273,7 @@ def test_customer_service():
     # 3. Add a customer with existing email
     try:
         service.add_customer(
-            full_name="Test Customer 3",
-            email="test@example.com",
-            phone="0987654321"
+            full_name="Test Customer 3", email="test@example.com", phone="0987654321"
         )
         raise AssertionError("Expected InvalidCustomerDataError for existing email")
     except InvalidCustomerDataError:
@@ -289,7 +308,7 @@ def test_customer_service():
         raise AssertionError("Expected InvalidCustomerDataError for invalid email")
     except InvalidCustomerDataError:
         print("update_customer correctly raised InvalidCustomerDataError for invalid email")
-    
+
     # 9. Update with not existing customer
     try:
         service.update_customer(9999, phone="0123456789")
@@ -307,11 +326,9 @@ def test_customer_service():
     assert regular_customer.customer_type == CustomerType.REGULAR
     print("downgrade_to_regular passed, customer_type:", regular_customer.customer_type)
 
-    # 12. Delete customer with no orders 
+    # 12. Delete customer with no orders
     no_order_customer = service.add_customer(
-        full_name="No Order Customer",
-        email="noorder@example.com",
-        phone="1112223333"
+        full_name="No Order Customer", email="noorder@example.com", phone="1112223333"
     )
     service.remove_customer(no_order_customer.id)
     try:
@@ -320,11 +337,13 @@ def test_customer_service():
     except CustomerNotFoundError:
         print("remove_customer correctly hard deleted customer with no orders")
 
+
 def main() -> None:
-    product_id = test_product_service()
-    customer_id = test_customer_service()
-    order_id = test_order_service()
+    test_product_service()
+    test_customer_service()
+    test_order_service()
     print("All service tests passed successfully.")
+
 
 if __name__ == "__main__":
     main()
