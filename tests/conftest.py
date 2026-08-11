@@ -110,4 +110,8 @@ def make_customer(customer_service):
             full_name=full_name, email=email, phone=phone, customer_type=customer_type
         )
 
+<<<<<<< HEAD
     return _make
+=======
+    return _make
+>>>>>>> origin/main
