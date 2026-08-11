@@ -1,26 +1,28 @@
 """
-Script to initialize the database 
+Script to initialize the database
 
-Run python src/database/init_db.py 
+Run python src/database/init_db.py
 """
 
 from pathlib import Path
 
 from src.config.settings import settings
 from src.database.connection import DatabaseConnection
+from src.database.migrate import apply_migrations
 
-# Point to the database/migrations/001_init.sql file 
-SCHEMA_PATH = Path(__file__).resolve().parents[2] / "database" / "migrations" / "001_init.sql"
 
 def init_db() -> None:
-    Path (settings.database_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(settings.database_path).parent.mkdir(parents=True, exist_ok=True)
 
-    schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
     db = DatabaseConnection()
-    db.execute_script(schema_sql)
+    newly_applied = apply_migrations(db)
 
-    print(f"Database initialized at: {settings.database_path}")
-    print("Tables created: products, customers, orders, order_items")
+    if newly_applied:
+        print(f"Database initialized and {len(newly_applied)} migrations applied.")
+        print(f"List of applied migrations: {newly_applied}")
+    else:
+        print("Database already initialized. No new migrations applied.")
+
 
 if __name__ == "__main__":
     init_db()

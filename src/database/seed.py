@@ -2,12 +2,13 @@
 Script to add data to database to test or develop the application
 
 Run python -m src.database.seed
-NOTE: Only run this script after running init_db.py 
+NOTE: Only run this script after running init_db.py
 """
 
 from datetime import datetime
 
 from src.database.connection import DatabaseConnection
+
 
 def seed() -> None:
     db = DatabaseConnection()
@@ -26,7 +27,7 @@ def seed() -> None:
         (name, category, price, stock_quantity, tags, is_active, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        products
+        products,
     )
 
     customers = [
@@ -40,10 +41,11 @@ def seed() -> None:
         (full_name, email, phone, customer_type, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?)
         """,
-        customers
+        customers,
     )
 
     print(f"Seeded database with {len(products)} products and {len(customers)} customers.")
+
 
 if __name__ == "__main__":
     seed()

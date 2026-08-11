@@ -1,15 +1,17 @@
-from enum import Enum
+from enum import StrEnum
 
-class ProductStatus(str, Enum):
+
+class ProductStatus(StrEnum):
     ACTIVE = "active"
     INACTIVE = "inactive"
 
-class CustomerType(str, Enum):
+
+class CustomerType(StrEnum):
     REGULAR = "regular"
     VIP = "vip"
 
-class OrderStatus(str, Enum):
+
+class OrderStatus(StrEnum):
     PENDING = "pending"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
-

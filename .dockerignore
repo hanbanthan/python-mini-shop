@@ -1,0 +1,10 @@
+venv/                  # Virtual environment của máy dev — không cần trong image, Docker tự cài dependency riêng
+__pycache__/            # Bytecode Python đã compile — sinh lại tự động, không cần copy
+*.pyc
+.pytest_cache/          # Cache của pytest
+.mypy_cache/             # Cache của mypy
+.ruff_cache/             # Cache của ruff
+database/store.db       # DB thật của máy dev — KHÔNG được đóng gói vào image (dữ liệu riêng, không phải code)
+logs/                   # File log audit.log sinh ra lúc chạy
+exports/                # File CSV export báo cáo
+.git/                   # Lịch sử git — không cần trong image, làm image nặng th

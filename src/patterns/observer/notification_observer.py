@@ -4,6 +4,7 @@ from src.patterns.observer.base import OrderCreatedEvent, OrderObserver
 
 logger = logging.getLogger("notification")
 
+
 class CustomerNotificationObserver(OrderObserver):
     def on_order_created(self, event: OrderCreatedEvent) -> None:
         message = (
@@ -13,4 +14,3 @@ class CustomerNotificationObserver(OrderObserver):
         )
         logger.info(message)
         print(message)
-

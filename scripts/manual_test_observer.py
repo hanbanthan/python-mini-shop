@@ -2,12 +2,12 @@
 python -m scripts.manual_test_observer
 
 Check
-1. create order successfully -> only see log/notification from 
+1. create order successfully -> only see log/notification from
 3 obsevers(stock update, audit log, notification) independently
 
 2. audit log write in seperate file
 
-3. OrderService not hard code depend on any specific observer: 
+3. OrderService not hard code depend on any specific observer:
 can subscribe 1 more observer, no need to change OrderService
 
 4. 1 observer fail -> not affect other observers, not
@@ -22,11 +22,11 @@ from uuid import uuid4
 from src.config.logging_config import LOG_DIR, configure_logging
 from src.models.enums import CustomerType
 from src.patterns.observer.base import OrderCreatedEvent, OrderObserver
-from src.patterns.observer.default_publisher import build_default_order_event_publisher
 from src.patterns.observer.publisher import OrderEventPublisher
 from src.services.customer_service import CustomerService
 from src.services.order_service import OrderService
 from src.services.product_service import ProductService
+
 
 class FakeSpyObserver(OrderObserver):
     def __init__(self) -> None:
@@ -36,9 +36,11 @@ class FakeSpyObserver(OrderObserver):
         self.called_with = event
         print(f"FakeSpyObserver called with event: {event}")
 
+
 class BuggyObserver(OrderObserver):
     def on_order_created(self, event: OrderCreatedEvent) -> None:
         raise RuntimeError("Intentional error in buggyObserver")
+
 
 def main() -> None:
     configure_logging()
@@ -80,7 +82,7 @@ def main() -> None:
     assert f"order_id={order.id}" in content
     print("Audit log written to audit.log successfully.")
 
-    # 3. OrderService not hard code depend on any specific observer -> subscibe 1 more observer 
+    # 3. OrderService not hard code depend on any specific observer -> subscibe 1 more observer
     print("\n=== Test 3: Custom Publisher with FakeSpyObserver ====")
     custome_publisher = OrderEventPublisher()
     spy = FakeSpyObserver()
@@ -91,7 +93,7 @@ def main() -> None:
 
     assert spy.called_with is not None
     assert spy.called_with.order.id == order2.id
-    print(f"FakeSpyObserver called with event for order ID: {spy.called_with.order.id}")    
+    print(f"FakeSpyObserver called with event for order ID: {spy.called_with.order.id}")
 
     # 4. 1 observer fail -> not affect other observers, not affect flow of main order
     print("\n=== Test 4: Buggy Observer ====")
@@ -109,6 +111,7 @@ def main() -> None:
     print(f"Order created with ID: {order3.id}, Total: {order3.total_amount}")
 
     print("\nAll tests passed successfully.")
+
 
 if __name__ == "__main__":
     main()

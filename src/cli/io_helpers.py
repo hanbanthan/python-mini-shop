@@ -1,17 +1,30 @@
-
 from decimal import Decimal, InvalidOperation
+from typing import Literal, overload
+
 
 def print_error(message: str) -> None:
     print(f"[error] {message}")
 
+
 def print_success(message: str) -> None:
     print(f"[success] {message}")
+
 
 def print_info(message: str) -> None:
     print(f"[info] {message}")
 
+
 def format_money(amount: Decimal) -> str:
     return f"{amount:,.2f} USD"
+
+
+@overload
+def prompt_str(prompt: str, allow_empty: Literal[False] = False) -> str: ...
+
+
+@overload
+def prompt_str(prompt: str, allow_empty: Literal[True]) -> str | None: ...
+
 
 def prompt_str(prompt: str, allow_empty: bool = False) -> str | None:
     while True:
@@ -23,9 +36,20 @@ def prompt_str(prompt: str, allow_empty: bool = False) -> str | None:
             continue
         return raw
 
+
+@overload
 def prompt_int(
-    prompt: str, allow_empty: bool = False, min_value: int | None = None
-) -> int | None:
+    prompt: str, allow_empty: Literal[False] = False, min_value: int | None = None
+) -> int: ...
+
+
+@overload
+def prompt_int(
+    prompt: str, allow_empty: Literal[True], min_value: int | None = None
+) -> int | None: ...
+
+
+def prompt_int(prompt: str, allow_empty: bool = False, min_value: int | None = None) -> int | None:
     while True:
         raw = input(prompt).strip()
         if not raw:
@@ -42,6 +66,19 @@ def prompt_int(
             print_error(f"Value must be at least {min_value}. Please try again.")
             continue
         return value
+
+
+@overload
+def prompt_decimal(
+    prompt: str, allow_empty: Literal[False] = False, min_value: Decimal | None = None
+) -> Decimal: ...
+
+
+@overload
+def prompt_decimal(
+    prompt: str, allow_empty: Literal[True], min_value: Decimal | None = None
+) -> Decimal | None: ...
+
 
 def prompt_decimal(
     prompt: str, allow_empty: bool = False, min_value: Decimal | None = None
@@ -63,6 +100,7 @@ def prompt_decimal(
             continue
         return value
 
+
 def prompt_menu_choice(prompt: str, valid_choices: set[str]) -> str:
     while True:
         raw = input(prompt).strip()
@@ -70,7 +108,8 @@ def prompt_menu_choice(prompt: str, valid_choices: set[str]) -> str:
             print_error(f"Invalid choice. Please choose from {', '.join(valid_choices)}.")
             continue
         return raw
-    
+
+
 def prompt_yes_no(prompt: str) -> bool:
     while True:
         raw = input(f"{prompt} (y/n): ").strip().lower()
@@ -80,15 +119,17 @@ def prompt_yes_no(prompt: str) -> bool:
             return False
         print_error("Invalid input. Please enter 'y' or 'n'.")
 
+
 def pause() -> None:
     input("Press Enter to continue...")
+
 
 def paginate(items: list, page_size: int, render_item) -> None:
     if not items:
         print_info("No items to display.")
         return
-    
-    total_pages = (len(items) + page_size -1) // page_size
+
+    total_pages = (len(items) + page_size - 1) // page_size
     page = 0
     while True:
         start = page * page_size
@@ -99,8 +140,12 @@ def paginate(items: list, page_size: int, render_item) -> None:
 
         if total_pages <= 1:
             return
-        
-        choice = input("Enter 'n' for next page, 'p' for previous page, or 'q' to quit: ").strip().lower()
+
+        choice = (
+            input("Enter 'n' for next page, 'p' for previous page, or 'q' to quit: ")
+            .strip()
+            .lower()
+        )
 
         if choice == "n" and page < total_pages - 1:
             page += 1

@@ -9,11 +9,12 @@ from datetime import datetime
 from decimal import Decimal
 
 from src.database.connection import DatabaseConnection
-from src.exceptions import InvalidOrderError
+from src.exceptions import InsufficientStockError, InvalidOrderError
 from src.models.enums import OrderStatus
 from src.models.order import Order
 from src.models.order_item import OrderItem
 from src.repositories.base_repository import BaseRepository
+
 
 class OrderRepository(BaseRepository[Order]):
     def __init__(self, db: DatabaseConnection | None = None) -> None:
@@ -48,21 +49,21 @@ class OrderRepository(BaseRepository[Order]):
                     unit_price_snapshot, subtotal)
                     VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                (
-                    order_id,
-                    item.product_id,
-                    item.product_name_snapshot,
-                    item.quantity,
-                    str(item.unit_price_snapshot),
-                    str(item.subtotal),
+                    (
+                        order_id,
+                        item.product_id,
+                        item.product_name_snapshot,
+                        item.quantity,
+                        str(item.unit_price_snapshot),
+                        str(item.subtotal),
+                    ),
                 )
-            )
 
         order.id = order_id
         return order
-    
+
     def create_order_with_stock_update(
-        self, order: Order, stock_updates: dict[int, int]
+        self, order: Order, stock_deductions: dict[int, int]
     ) -> Order:
         order.validate_not_empty()
         with self._db.transaction() as cursor:
@@ -74,14 +75,14 @@ class OrderRepository(BaseRepository[Order]):
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                order.customer_id,
-                str(order.total_before_discount),
-                str(order.discount_amount),
-                str(order.total_amount),
-                order.status.value,
-                order.created_at.isoformat(),
-                order.updated_at.isoformat(),
-                )
+                    order.customer_id,
+                    str(order.total_before_discount),
+                    str(order.discount_amount),
+                    str(order.total_amount),
+                    order.status.value,
+                    order.created_at.isoformat(),
+                    order.updated_at.isoformat(),
+                ),
             )
             order_id = cursor.lastrowid
 
@@ -104,22 +105,27 @@ class OrderRepository(BaseRepository[Order]):
                 )
 
             now_iso = datetime.now().isoformat()
-            for product_id, new_stock in stock_updates.items():
+            for product_id, quantity in stock_deductions.items():
                 cursor.execute(
-                    "UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?",
-                    (new_stock, now_iso, product_id),
+                    """
+                    UPDATE products
+                    SET stock_quantity = stock_quantity - ?, updated_at = ?
+                    WHERE id = ? AND stock_quantity >= ?
+                    """,
+                    (quantity, now_iso, product_id, quantity),
                 )
+                if cursor.rowcount == 0:
+                    raise InsufficientStockError(f"Insufficient stock for product id {product_id}")
+
         order.id = order_id
         return order
-    
+
     def cancel_order_with_stock_update(
-        self,
-        order: Order,
-        stock_updates: dict[int, int]
+        self, order: Order, stock_deductions: dict[int, int]
     ) -> Order:
         if order.id is None:
             raise InvalidOrderError("Order id is required for canceling")
-        
+
         with self._db.transaction() as cursor:
             cursor.execute(
                 """
@@ -136,7 +142,7 @@ class OrderRepository(BaseRepository[Order]):
 
             now_iso = datetime.now().isoformat()
 
-            for product_id, new_stock in stock_updates.items():
+            for product_id, new_stock in stock_deductions.items():
                 cursor.execute(
                     "UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?",
                     (new_stock, now_iso, product_id),
@@ -149,16 +155,28 @@ class OrderRepository(BaseRepository[Order]):
         if order_row is None:
             return None
         return self._load_order(order_row)
-    
+
     def get_by_id_or_raise(self, entity_id: int) -> Order:
         order = self.get_by_id(entity_id)
         if order is None:
             raise InvalidOrderError(f"Order with id {entity_id} not found")
         return order
-    
+
     def get_all(self) -> list[Order]:
         order_rows = self._db.fetch_all("SELECT * FROM orders ORDER BY id")
         return [self._load_order(row) for row in order_rows]
+
+    def get_page(self, page: int = 1, page_size: int = 10) -> tuple[list[Order], int]:
+        """Nang cao, phan trang bang LIMIT/OFFSET ngay tai DB."""
+        if page < 1:
+            page = 1
+        offset = (page - 1) * page_size
+        order_rows = self._db.fetch_all(
+            "SELECT * FROM orders ORDER BY id LIMIT ? OFFSET ?", (page_size, offset)
+        )
+        total_row = self._db.fetch_one("SELECT COUNT(*) as total FROM orders")
+        total = int(total_row["total"]) if total_row is not None else 0
+        return [self._load_order(row) for row in order_rows], total
 
     def search(
         self,
@@ -208,8 +226,8 @@ class OrderRepository(BaseRepository[Order]):
 
     def _load_order(self, order_row: sqlite3.Row) -> Order:
         item_rows = self._db.fetch_all(
-            "SELECT * FROM order_items WHERE order_id = ? ORDER BY id"
-            , (order_row["id"], ),
+            "SELECT * FROM order_items WHERE order_id = ? ORDER BY id",
+            (order_row["id"],),
         )
         return self._row_to_order(order_row, item_rows)
 
@@ -219,7 +237,7 @@ class OrderRepository(BaseRepository[Order]):
             id=order_row["id"],
             customer_id=order_row["customer_id"],
         )
-        
+
         for item_row in items_rows:
             order.add_item(
                 OrderItem(
@@ -229,11 +247,11 @@ class OrderRepository(BaseRepository[Order]):
                     unit_price_snapshot=Decimal(str(item_row["unit_price_snapshot"])),
                 )
             )
-        
+
         discount = Decimal(str(order_row["discount_amount"]))
         if discount > 0:
             order.apply_discount(discount)
-        
+
         order.status = OrderStatus(order_row["status"])
         order.created_at = datetime.fromisoformat(order_row["created_at"])
         order.updated_at = datetime.fromisoformat(order_row["updated_at"])
