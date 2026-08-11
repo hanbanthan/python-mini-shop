@@ -105,8 +105,12 @@ def test_product_service_propagates_database_error():
 def test_product_service_search_with_fake_repository():
     fake_repo = FakeProductRepository()
     service = ProductService(product_repository=fake_repo)
-    service.add_product(name="Laptop Dell", category="Electronics", price=Decimal("1000000"), stock_quantity=1)
-    service.add_product(name="Ao thun", category="Fashion", price=Decimal("100000"), stock_quantity=1)
+    service.add_product(
+        name="Laptop Dell", category="Electronics", price=Decimal("1000000"), stock_quantity=1
+    )
+    service.add_product(
+        name="Ao thun", category="Fashion", price=Decimal("100000"), stock_quantity=1
+    )
 
     results = service.search_products(category="Electronics")
     assert len(results) == 1
