@@ -1,0 +1,12 @@
+2026-08-03 13:03:28,834 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:04:24,027 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:04:44,333 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:07:37,561 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:11:08,890 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:12:14,131 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:13:54,179 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:14:32,676 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-03 13:14:39,449 [INFO] audit: Order created: order_id=1, customer_id=1, customer_name=Test Buyer, total_before_discount=1500000.00, discount_amount=0.00, total_amount=1500000.00, status=completed
+2026-08-11 11:18:32,748 [INFO] audit: Order created: order_id=13 customer_id=18 total_before_discount=35 discount_amount=0 total_amount=35 
+2026-08-11 11:18:32,749 [ERROR] audit: Failed to write to audit log DB: Database operation failed: no such table: audit_log
+2026-08-11 11:39:55,967 [INFO] audit: Order created: order_id=14 customer_id=18 total_before_discount=35 discount_amount=0 total_amount=35 
