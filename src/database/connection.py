@@ -33,7 +33,10 @@ class DatabaseConnection:
         """Lazy-connect: open connection when first time use"""
         if self._connection is None:
             try:
-                self._connection = sqlite3.connect(settings.database_path)
+                self._connection = sqlite3.connect(
+                    settings.database_path,
+                    check_same_thread=False,
+                )
                 self._connection.execute("PRAGMA foreign_keys = ON")
                 self._connection.row_factory = sqlite3.Row
             except sqlite3.Error as exc:

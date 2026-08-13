@@ -28,6 +28,11 @@ class CustomerService:
     def list_customers(self) -> list[Customer]:
         return self._repo.get_all()
 
+    def list_customers_page(self, page: int = 1, page_size: int = 10) -> tuple[list[Customer], int]:
+        customers, total_count = self._repo.get_page(page=page, page_size=page_size)
+        total_pages = max(1, (total_count + page_size -1) // page_size)
+        return customers, total_pages
+
     def get_customer(self, customer_id: int) -> Customer:
         return self._repo.get_by_id_or_raise(customer_id)
 

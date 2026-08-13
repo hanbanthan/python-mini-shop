@@ -94,6 +94,11 @@ class OrderService:
 
     def list_orders(self) -> list[Order]:
         return self._order_repo.get_all()
+    
+    def list_orders_page(self, page: int = 1, page_size: int = 10) -> tuple[list[Order], int]:
+        orders, total_count = self._order_repo.get_page(page=page, page_size=page_size)
+        total_pages = max(1, (total_count + page_size -1) // page_size)
+        return orders, total_pages
 
     def get_order(self, order_id: int) -> Order:
         return self._order_repo.get_by_id_or_raise(order_id)

@@ -2,13 +2,14 @@ import pytest
 
 from src.exceptions import (
     AppError,
-    CustomerNotFoundError,
-    DatabaseOperationError,
-    InsufficientStockError,
-    InvalidCustomerDataError,
-    InvalidOrderError,
-    InvalidProductDataError,
     ProductNotFoundError,
+    InvalidProductDataError,
+    InsufficientStockError,
+    InvalidOrderError,
+    OrderNotFoundError,
+    CustomerNotFoundError,
+    InvalidCustomerDataError,
+    DatabaseOperationError,
     UserInputError,
 )
 
@@ -17,6 +18,7 @@ ALL_EXCEPTIONS = [
     InvalidProductDataError,
     InsufficientStockError,
     InvalidOrderError,
+    OrderNotFoundError,
     CustomerNotFoundError,
     InvalidCustomerDataError,
     DatabaseOperationError,

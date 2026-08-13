@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from src.database.connection import DatabaseConnection
-from src.exceptions import InsufficientStockError, InvalidOrderError
+from src.exceptions import InsufficientStockError, InvalidOrderError, OrderNotFoundError
 from src.models.enums import OrderStatus
 from src.models.order import Order
 from src.models.order_item import OrderItem
@@ -159,7 +159,7 @@ class OrderRepository(BaseRepository[Order]):
     def get_by_id_or_raise(self, entity_id: int) -> Order:
         order = self.get_by_id(entity_id)
         if order is None:
-            raise InvalidOrderError(f"Order with id {entity_id} not found")
+            raise OrderNotFoundError(f"Order with id {entity_id} not found")
         return order
 
     def get_all(self) -> list[Order]:

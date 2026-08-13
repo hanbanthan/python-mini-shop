@@ -53,6 +53,16 @@ class CustomerRepository(BaseRepository[Customer]):
     def get_all(self) -> list[Customer]:
         rows = self._db.fetch_all("SELECT * FROM customers")
         return [self._row_to_customer(row) for row in rows]
+    
+    def get_page(self, page: int = 1, page_size: int = 10) -> tuple[list[Customer], int]:
+        if page < 1:
+            page = 1
+        offset = (page - 1) * page_size
+        rows = self._db.fetch_all(
+            "SELECT * FROM customers ORDER BY id LIMIT ? OFFSET ?", (page_size, offset)
+        )
+        total = self._db.fetch_one("SELECT COUNT(*) AS cnt FROM customers")["cnt"]
+        return [self._row_to_customer(row) for row in rows], total
 
     def search(self, keyword: str | None = None) -> list[Customer]:
         query = "SELECT * FROM customers WHERE 1=1"

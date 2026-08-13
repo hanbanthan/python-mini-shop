@@ -17,6 +17,9 @@ class InsufficientStockError(AppError):
 class InvalidOrderError(AppError):
     """Exception raised when an order is invalid or cannot be processed."""
 
+class OrderNotFoundError(AppError):
+    """Exception raised when an order is not found in the database."""
+
 
 class CustomerNotFoundError(AppError):
     """Exception raised when a customer is not found in the database."""

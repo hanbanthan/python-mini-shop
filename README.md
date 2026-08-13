@@ -39,7 +39,22 @@ MAX_DISCOUNT_PERCENT=15
 VIP_DISCOUNT_PERCENT=10
 LARGE_ORDER_THRESHOLD=5000000
 LARGE_ORDER_EXTRA_DISCOUNT=5
+
 ```
+
+## Running the API
+
+Start the FastAPI server:
+
+```bash
+uvicorn src.api.app:app --reload
+```
+
+Then open:
+
+Swagger UI: http://localhost:8000/docs
+OpenAPI schema: http://localhost:8000/openapi.json
+The API and CLI use the same SQLite database, so data created in one interface is immediately visible in the other
 
 ## Running the Program
 ```bash
